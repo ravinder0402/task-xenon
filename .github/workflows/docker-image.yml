@@ -15,7 +15,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag ravinder4u/new-xenon-image:latest
+      run: docker build new-xenon-image:latest . --file Dockerfile 
+    - name: Tagging docker image
+      run: docker tag new-xenon-image:latest ravinder4u/new-xenon-image:latest
     - name: Docker login
       run: docker login
     - name: Push docker image to docker hub
