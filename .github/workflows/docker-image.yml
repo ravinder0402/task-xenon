@@ -19,6 +19,9 @@ jobs:
     - name: minikube status
       run: minikube status
     - name: Check Service
+      run: |
+           kubectl get pods -A
+           sleep 60
+    - name: Check pod health
       run: kubectl get pods -A
-    - name: minikube service url
-      run: minikube service nginx-service --url
+   
