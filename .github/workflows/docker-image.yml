@@ -19,6 +19,6 @@ jobs:
     - name: Tagging docker image
       run: docker tag new-xenon-image:latest ravinder4u/new-xenon-image:latest
     - name: Docker login
-      run: docker login
+      run: docker login -u rravinder0402@gmail.com -p Ravindernangal@1#
     - name: Push docker image to docker hub
       run: docker push ravinder4u/new-xenon-image:latest
