@@ -25,7 +25,14 @@ jobs:
       run: docker push ravinder4u/new-xenon-image:latest
     - name: Pulling docker image from docker hub
       run: docker pull ravinder4u/new-xenon-image:latest
-    - name: Start minikube
-      run: kubectl get pods -A
+    - name: Start minikube and create deployment for nginx image
+      run: kubectl create deployment nginx-deployment --image=ravinder4u/new-xenon-image:latest
+    - name: Check deployments
+      run: kubectl get deployments -A
+    - name: Create service so that it can be exposed
+      run: kubectl expose deployment nginx-deployment --port=80 --target-port=80 --name=nginx-service --type=LoadBalancer
+    - name: Check Service
+      run: kubectl get services -A
+
       
 
