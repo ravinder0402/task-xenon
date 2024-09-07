@@ -33,3 +33,5 @@ jobs:
       run: kubectl expose deployment nginx-deployment --port=80 --target-port=80 --name=nginx-service --type=LoadBalancer
     - name: Check Service
       run: kubectl get services -A
+    - name: minikube service url
+      run: minikube service nginx-service --url
