@@ -1,3 +1,4 @@
+
 name: Docker Image CI
 
 on:
@@ -14,14 +15,29 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: minikube start
-      run: minikube start
-    - name: minikube status
-      run: minikube status
-    - name: Check Service
+    - uses: medyagh/setup-minikube@latest
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag new-xenon-image:latest
+    - name: Tagging docker image
+      run: docker tag new-xenon-image:latest ravinder4u/new-xenon-image:latest
+    - name: Docker login
+      run: docker login -u rravinder0402@gmail.com -p Ravindernangal@1#
+    - name: Push docker image to docker hub
+      run: docker push ravinder4u/new-xenon-image:latest
+    - name: Pulling docker image from docker hub
+      run: docker pull ravinder4u/new-xenon-image:latest
+    - name: Start minikube and create deployment for nginx image
       run: |
-           kubectl get pods -A
+           kubectl create deployment nginx-deployment --image=ravinder4u/new-xenon-image:latest
            sleep 60
-    - name: Check pod health
-      run: kubectl get pods -A
+    - name: Check deployments
+      run: kubectl get deployments -A
+    - name: Create service so that it can be exposed
+      run: |
+           kubectl expose deployment nginx-deployment --port=80 --target-port=80 --name=nginx-service --type=LoadBalancer
+           sleep 60
+    - name: Check Service
+      run: kubectl get services -A
+    - name: minikube service url
+      run: minikube service nginx-service --url
    
