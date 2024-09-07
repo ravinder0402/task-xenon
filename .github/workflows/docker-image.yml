@@ -22,3 +22,5 @@ jobs:
       run: docker login -u rravinder0402@gmail.com -p Ravindernangal@1#
     - name: Push docker image to docker hub
       run: docker push ravinder4u/new-xenon-image:latest
+    - name: Pulling docker image from docker hub
+      run: docker pull ravinder4u/new-xenon-image:latest
