@@ -33,12 +33,12 @@ jobs:
       run: kubectl get deployments -A
     - name: Create service so that it can be exposed
       run: |
-           kubectl expose deployment nginx-deployment --port=80 --target-port=80 --name=nginx-service --type=NodePort=32456
+           kubectl expose deployment nginx-deployment --port=80 --target-port=80 --name=nginx-service --type=NodePort
            sleep 60
     - name: Check Service
       run: kubectl get services -A
     - name: minikube service url
       run: |
            minikube service nginx-service --url
-           curl http://192.168.49.2:32346
+        
       
