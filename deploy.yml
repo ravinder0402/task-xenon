@@ -16,7 +16,7 @@ spec:
         - name: <CONTAINER_NAME>
           image: <IMAGE_NAME
           ports:
-            - containerPort: <PORT
+            - containerPort: <PORT>
 
 ---
 apiVersion: v1
