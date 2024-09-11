@@ -3,9 +3,16 @@ name: Building and pushing docker image
 on:
   workflow_dispatch:
     inputs:
-      tagname:
-        description: "Please enter tagname for image "
+      Username:
+        description: "Please enter Dockerhub Username "
         required: true
+      Imagename:
+        description: "Please enter your Image name"
+        required: true
+      Tagname:
+        description: "Please enter tagname for image"
+        required: true
+        
         
     
 jobs:
