@@ -2,21 +2,21 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-new-image
-spec: 
-  selector: 
+spec:
+  selector:
     matchLabels:
       app: nginx-new-image
-replicas: 1
-template:
-  metadata:
-    labels:
+  replicas: 1
+  template:
+    metadata:
+      labels:
         app: nginx-new-image
-  spec:
-    containers:
-      - name: nginx-container
-        image: ravinder4u/test-image:t1
-        ports:
-          - containerPort: 80
+    spec:
+      containers:
+        - name: nginx-container
+          image: ravinder4u/test-image:t1
+          ports:
+            - containerPort: 80
 
 ---
 apiVersion: v1
