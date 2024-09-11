@@ -3,9 +3,13 @@ name: Building and pushing docker image
 on:
   workflow_dispatch:
     inputs:
-      choice:
-        type: choice
-        description: Select an Tag name for image
+      app:
+        description: "The app to release. The name should be the same as name in package.json"
+        required: true
+      version:
+        description: "The version to release. The version should be the same as version in package.json. For example, 1.0.0"
+        required: true
+
         
     
 jobs:
