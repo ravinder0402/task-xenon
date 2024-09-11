@@ -25,4 +25,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: ravinder4u/new-xenon-image:${{ github.run_attempt }}
+        tags: ravinder4u/new-xenonn-image:${{ github.sha}}
