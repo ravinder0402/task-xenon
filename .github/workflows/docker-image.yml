@@ -1,10 +1,10 @@
-name: Building and pushing docker image
+name: Building and pushing Docker image
 
 on:
   workflow_dispatch:
     inputs:
       username:
-        description: "Please enter Dockerhub Username "
+        description: "Please enter Dockerhub Username"
         required: true
       imagename:
         description: "Please enter your Image name"
@@ -12,38 +12,44 @@ on:
       tagname:
         description: "Please enter tagname for image"
         required: true
-        
-        
-    
+
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - name: Check out the repo
       uses: actions/checkout@v4
 
-    - name: Login to dockerhub
+    - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
-       username: ${{ secrets.USER_NAME }}
-       password: ${{ secrets.ACCESS_TOKEN }}
+        username: ${{ secrets.USER_NAME }}
+        password: ${{ secrets.ACCESS_TOKEN }}
 
-    - name: Build and push dockerhub
+    - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
         context: .
         push: true
         tags: ${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}
 
-    - name: Start minikube for deployment
+    - name: Set up Minikube
       uses: medyagh/setup-minikube@latest
       with:
-        context: .
-        push: true
-        run: |
-               kubectl apply -f deploy.yml
-               sleep 60
-               kubectl get pods
+        minikube-version: 'latest'
+        driver: 'docker'
+
+    - name: Start Minikube
+      run: |
+        minikube start --driver=docker
+
+    - name: Set up kubectl
+      run: |
+        kubectl config use-context minikube
+
+    - name: Deploy to Minikube
+      run: |
+        kubectl apply -f deploy.yml
+        sleep 60  
+        kubectl get pods
