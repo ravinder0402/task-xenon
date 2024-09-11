@@ -25,4 +25,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: ravinder4u/new-image:${{ github.run_attempt }}
+        tags: ravinder4u/new-image-test:${{ github.run_attempt }}
