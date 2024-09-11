@@ -3,13 +3,13 @@ name: Building and pushing docker image
 on:
   workflow_dispatch:
     inputs:
-      Username:
+      username:
         description: "Please enter Dockerhub Username "
         required: true
-      Imagename:
+      imagename:
         description: "Please enter your Image name"
         required: true
-      Tagname:
+      tagname:
         description: "Please enter tagname for image"
         required: true
         
@@ -36,4 +36,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: ravinder4u/new-xenonn-image:${{ inputs.tagname }}
+        tags: ${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}
