@@ -37,3 +37,13 @@ jobs:
         context: .
         push: true
         tags: ${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}
+
+    - name: Start minikube for deployment
+      uses: medyagh/setup-minikube@latest
+      with:
+        context: .
+        push: true
+        tags: |
+               kubectl apply -f deploy.yml
+               sleep 60
+               kubectl get pods
