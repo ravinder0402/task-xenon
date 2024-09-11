@@ -1,11 +1,9 @@
-name: Docker Image CI
+name: Building and pushing docker image
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
+    
 jobs:
 
   build:
@@ -13,32 +11,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: medyagh/setup-minikube@latest
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag new-xenon-image1:latest
-    - name: Tagging docker image
-      run: docker tag new-xenon-image1:latest ravinder4u/new-xenon-image1:latest
-    - name: Docker login
-      run: docker login -u ${{ secrets.USER_NAME }} -p ${{ secrets.PASS_VALUE }}
-    - name: Push docker image to docker hub
-      run: docker push ravinder4u/new-xenon-image1:latest
-    - name: Pulling docker image from docker hub
-      run: docker pull ravinder4u/new-xenon-image1:latest
-    - name: Start minikube and create deployment for nginx image
-      run: |
-           kubectl create deployment nginx-deployment1 --image=ravinder4u/new-xenon-image1:latest
-           sleep 60
-    - name: Check deployments
-      run: kubectl get deployments -A
-    - name: Create service so that it can be exposed
-      run: |
-           kubectl expose deployment nginx-deployment1 --port=80 --target-port=80 --name=nginx-service --type=NodePort
-           sleep 60
-    - name: Check Service
-      run: kubectl get services -A
-    - name: minikube service url
-      run: |
-           minikube service nginx-service --url
-        
-      
+    - name: Check out the repo
+      uses: actions/checkout@v4
+
+    - name: Login to dockerhub
+      uses: docker/login-action@v3
+      with:
+       username: ${{ secrets.USER_NAME }}
+       password: ${{ secrets.ACCESS_TOKEN }}
+
+    - name: Build and push dockerhub
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ravinder4u/new-image:latest
