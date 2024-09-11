@@ -25,4 +25,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: ravinder4u/new-image-test:${{ github.workflow_sha }}
+        tags: ravinder4u/new-image-test:${{ github.sha }}
