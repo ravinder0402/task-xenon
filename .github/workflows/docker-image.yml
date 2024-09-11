@@ -12,7 +12,15 @@ on:
       tagname:
         description: "Please enter tagname for image"
         required: true
-
+      appname:
+        description: "Enter the app name"
+        required: true
+      containername:
+        description: "Enter the name of container"
+        required: true
+      portvalue:
+        description: "Enter the value of port"
+        required: true
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -47,6 +55,13 @@ jobs:
     - name: Set up kubectl
       run: |
         kubectl config use-context minikube
+    - name: Replacing values in deploy.yml
+      run: |
+          IMAGE_NAME="${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}"
+          APP_NAME="${{ inputs.appname }}"
+          PORT="${{ inputs.portvalue }}"
+          CONTAINER_NAME="${{ inputs.containername }}"
+          sed "s|<IMAGE_NAME>|${IMAGE_NAME}|g; s|<APP_NAME>|${APP_NAME}|g; s|<PORT>|${PORT}|g; s|<CONTAINER_NAME>|${CONTAINER_NAME}|g;"
 
     - name: Deploy to Minikube
       run: |
