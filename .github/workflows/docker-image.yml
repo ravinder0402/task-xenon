@@ -52,13 +52,7 @@ jobs:
     - name: Start Minikube
       run: |
         minikube start --driver=docker
-
-    - name: Set up kubectl
-      run: |
         kubectl config use-context minikube
-
-    - name: Replace placeholders in deploy.yml
-      run: |
         IMAGE_NAME="${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}"
         APP_NAME="${{ inputs.appname }}"
         PORT="${{ inputs.portvalue }}"
