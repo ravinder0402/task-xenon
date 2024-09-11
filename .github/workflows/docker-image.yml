@@ -63,7 +63,7 @@ jobs:
         APP_NAME="${{ inputs.appname }}"
         PORT="${{ inputs.portvalue }}"
         CONTAINER_NAME="${{ inputs.containername }}"
-        sed "s|<IMAGE_NAME>|${IMAGE_NAME}|g; s|<APP_NAME>|${APP_NAME}|g; s|<PORT>|${PORT}|g; s|<CONTAINER_NAME>|${CONTAINER_NAME}|g" 
+        sed "s|<IMAGE_NAME>|${IMAGE_NAME}|g; s|<APP_NAME>|${APP_NAME}|g; s|<PORT>|${PORT}|g; s|<CONTAINER_NAME>|${CONTAINER_NAME}|g" deploy.template.yml > deploy.yml 
 
     - name: Deploy to Minikube
       run: |
