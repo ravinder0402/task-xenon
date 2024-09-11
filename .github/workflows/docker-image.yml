@@ -20,7 +20,7 @@ jobs:
     - name: Tagging docker image
       run: docker tag new-xenon-image1:latest ravinder4u/new-xenon-image1:latest
     - name: Docker login
-      run: docker login -u "${{ USER_NAME }}" -p "${{ PASS_VALUE }}"
+      run: docker login -u ${{ secrets.USER_NAME }} -p ${{ secrets.PASS_VALUE }}
     - name: Push docker image to docker hub
       run: docker push ravinder4u/new-xenon-image1:latest
     - name: Pulling docker image from docker hub
