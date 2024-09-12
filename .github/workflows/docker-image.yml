@@ -64,5 +64,6 @@ jobs:
         kubectl apply -f deploy-new.yml
         sleep 60  
         kubectl get pods
+        kubectl get services
     - name: List files
       run: ls -la
