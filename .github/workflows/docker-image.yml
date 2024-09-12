@@ -49,7 +49,7 @@ jobs:
         minikube-version: 'latest'
         driver: 'docker'
 
-    - name: Start Minikube
+    - name: Start Minikube and Configure kubectl
       run: |
         minikube start --driver=docker
         kubectl config use-context minikube
@@ -65,6 +65,5 @@ jobs:
         sleep 60  
         kubectl get pods
         kubectl get services
-        MINIKUBE_URL= $(minikube get ${{ inputs.appname }} --url)
+        MINIKUBE_URL=$(minikube service ${{ inputs.appname }} --url)
         curl $MINIKUBE_URL
-   
