@@ -65,6 +65,6 @@ jobs:
         sleep 60  
         kubectl get pods
         kubectl get services
-        MINIKUBE_URL= $(minikube get "${{ inputs.appname }} --url)
+        MINIKUBE_URL= $(minikube get ${{ inputs.appname }} --url)
         curl $MINIKUBE_URL
    
