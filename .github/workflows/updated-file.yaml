@@ -46,12 +46,6 @@ jobs:
         push: true
         tags: ${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}
 
-    - name: Get SDK Version from config
-      id: lookupSdkVersion
-      uses: devorbitus/yq-action-output@v1.1
-      with:
-        cmd: yq eval '.renutil.version' 'config.yml'
-
     - name: Start Minikube and Configure kubectl
       run: |
         kubectl config use-context minikube
@@ -60,26 +54,30 @@ jobs:
         PORT="${{ inputs.portvalue }}"
         CONTAINER_NAME="${{ inputs.containername }}"
         NAMESPACE="${{ inputs.namespace }}"
-        
-        # Generate combined Deployment and Service YAML using yq output
-        yq eval "(
-          .kind == \"Deployment\" | 
-          .metadata.name = \"$APP_NAME\" |
-          .spec.selector.matchLabels.app = \"$APP_NAME\" |
-          .spec.template.metadata.labels.app = \"$APP_NAME\" |
-          .metadata.namespace = \"$NAMESPACE\" |
-          .spec.template.spec.containers[0].name = \"$CONTAINER_NAME\" |
-          .spec.template.spec.containers[0].image = \"$IMAGE_NAME\" |
-          .spec.template.spec.containers[0].ports[0].containerPort = $PORT
-        ) |
-        (
-          .kind == \"Service\" | 
-          .metadata.name = \"$APP_NAME-service\" |
-          .metadata.namespace = \"$NAMESPACE\" |
-          .spec.selector.app = \"$APP_NAME\" |
-          .spec.ports[0].port = $PORT |
-          .spec.ports[0].targetPort = $PORT
-        )" deploy.template.yml > deploy-new.yml
+
+    - name: Placing values in template yaml file
+      id: Value placing
+      uses: devorbitus/yq-action-output@v1.1
+      with:
+        cmd: |
+          yq eval "(
+            .kind == \"Deployment\" | 
+            .metadata.name = \"$APP_NAME\" |
+            .spec.selector.matchLabels.app = \"$APP_NAME\" |
+            .spec.template.metadata.labels.app = \"$APP_NAME\" |
+            .metadata.namespace = \"$NAMESPACE\" |
+            .spec.template.spec.containers[0].name = \"$CONTAINER_NAME\" |
+            .spec.template.spec.containers[0].image = \"$IMAGE_NAME\" |
+            .spec.template.spec.containers[0].ports[0].containerPort = $PORT
+          ) |
+          (
+            .kind == \"Service\" | 
+            .metadata.name = \"$APP_NAME-service\" |
+            .metadata.namespace = \"$NAMESPACE\" |
+            .spec.selector.app = \"$APP_NAME\" |
+            .spec.ports[0].port = $PORT |
+            .spec.ports[0].targetPort = $PORT
+          )" deploy.template.yml > deploy-new.yml
 
     - name: Deploy to Minikube
       run: |
