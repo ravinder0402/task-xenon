@@ -56,22 +56,22 @@ jobs:
         PORT="${{ inputs.portvalue }}"
         CONTAINER_NAME="${{ inputs.containername }}"
         NAMESPACE="${{ inputs.namespace }}"
-    - name: Start Minikube and Configure kubectl
-      run: |
-        kubectl config use-context minikube
-        IMAGE_NAME="${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}"
-        APP_NAME="${{ inputs.appname }}"
-        PORT="${{ inputs.portvalue }}"
-        CONTAINER_NAME="${{ inputs.containername }}"
-        NAMESPACE="${{ inputs.namespace }}"
+
         cp deploy.template.yml deploy-new.yml
+
+        # Replace placeholders using yq for Deployment
         yq w -i deploy-new.yml metadata.name "${APP_NAME}"
         yq w -i deploy-new.yml metadata.namespace "${NAMESPACE}"
         yq w -i deploy-new.yml spec.selector.matchLabels.app "${APP_NAME}"
         yq w -i deploy-new.yml spec.template.metadata.labels.app "${APP_NAME}"
-        yq w -i deploy-new.yml spec.containers[0].name "${CONTAINER_NAME}"
-        yq w -i deploy-new.yml spec.containers[0].image "${IMAGE_NAME}"
-        yq w -i deploy-new.yml spec.containers[0].ports[0].containerPort "${PORT}"
+        yq w -i deploy-new.yml spec.template.spec.containers[0].name "${CONTAINER_NAME}"
+        yq w -i deploy-new.yml spec.template.spec.containers[0].image "${IMAGE_NAME}"
+        yq w -i deploy-new.yml spec.template.spec.containers[0].ports[0].containerPort "${PORT}"
+
+        # Replace placeholders for Service
+        yq w -i deploy-new.yml metadata.name "${APP_NAME}"
+        yq w -i deploy-new.yml metadata.namespace "${NAMESPACE}"
+        yq w -i deploy-new.yml spec.selector.app "${APP_NAME}"
         yq w -i deploy-new.yml spec.ports[0].port "${PORT}"
         yq w -i deploy-new.yml spec.ports[0].targetPort "${PORT}"
         cat deploy-new.yml
@@ -84,3 +84,4 @@ jobs:
         kubectl get services -n ${{ inputs.namespace }}
         MINIKUBE_URL=$(minikube service ${{ inputs.appname }} --namespace ${{ inputs.namespace }} --url)
         curl $MINIKUBE_URL
+
