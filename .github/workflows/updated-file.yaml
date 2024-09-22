@@ -55,11 +55,9 @@ jobs:
         CONTAINER_NAME="${{ inputs.containername }}"
         NAMESPACE="${{ inputs.namespace }}"
 
-    - name: Place values in template YAML file
-      id: value_placing
-      uses: devorbitus/yq-action-output@v1.1
-      with:
-        cmd: |
+    - name: Create deploy-new.yml from template
+      run: |
+        if [[ -f deploy.template.yml ]]; then
           yq eval "(
             .kind == \"Deployment\" | 
             .metadata.name = \"$APP_NAME\" |
@@ -72,23 +70,36 @@ jobs:
           ) |
           (
             .kind == \"Service\" | 
-            .metadata.name = \"$APP_NAME\" |
+            .metadata.name = \"$APP_NAME-service\" |
             .metadata.namespace = \"$NAMESPACE\" |
             .spec.selector.app = \"$APP_NAME\" |
             .spec.ports[0].port = $PORT |
             .spec.ports[0].targetPort = $PORT
           )" deploy.template.yml > deploy-new.yml
 
-    - name: Output deploy-new.yml
+          echo "Contents of deploy.template.yml after transformation:"
+          cat deploy-new.yml
+        else
+          echo "deploy.template.yml not found. Cannot create deploy-new.yml."
+          exit 1
+        fi
+
+    - name: Check deploy-new.yml contents
       run: |
+        echo "Contents of deploy-new.yml:"
         cat deploy-new.yml
+        echo "End of deploy-new.yml"
 
     - name: Deploy to Minikube
       run: |
-        kubectl apply -f deploy-new.yml
+        if [[ -s deploy-new.yml ]]; then
+          kubectl apply -f deploy-new.yml
+        else
+          echo "Error: deploy-new.yml is empty or does not exist."
+          exit 1
+        fi
         sleep 60  
         kubectl get pods -n ${{ inputs.namespace }}
         kubectl get services -n ${{ inputs.namespace }}
         MINIKUBE_URL=$(minikube service ${{ inputs.appname }} --namespace ${{ inputs.namespace }} --url)
         curl $MINIKUBE_URL
-
