@@ -12,10 +12,6 @@ jobs:
     steps:
     - name: Check out the repository
       uses: actions/checkout@v4
-
-    - name: Setup YQ
-      uses: devorbitus/yq-action-output@v1.1
-
     - name: Check YQ Version
       run: |
         yq --version
