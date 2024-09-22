@@ -56,6 +56,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y yq || sudo snap install yq
           
+          # Remove duplicate entries in pgdg.list
+          if [ -f /etc/apt/sources.list.d/pgdg.list ]; then
+            sudo awk '!seen[$0]++' /etc/apt/sources.list.d/pgdg.list | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          fi
+          
           # Fix APT Repository Issues
           sudo sed -i '/pgdg.list/d' /etc/apt/sources.list
           sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7B3B788A8D3785C
