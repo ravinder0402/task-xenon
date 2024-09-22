@@ -46,6 +46,20 @@ jobs:
         push: true
         tags: ${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}
 
+    - name: Install yq
+      run: |
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+          brew install yq || brew upgrade yq
+        elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+          choco install yq || choco upgrade yq
+        elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+          sudo apt-get update
+          sudo apt-get install -y yq || sudo snap install yq
+        else
+          echo "Unsupported OS"
+          exit 1
+        fi
+
     - name: Start Minikube and Configure kubectl
       run: |
         kubectl config use-context minikube
@@ -54,7 +68,27 @@ jobs:
         PORT="${{ inputs.portvalue }}"
         CONTAINER_NAME="${{ inputs.containername }}"
         NAMESPACE="${{ inputs.namespace }}"
-        sed "s|<IMAGE_NAME>|${IMAGE_NAME}|g; s|<APP_NAME>|${APP_NAME}|g; s|<PORT>|${PORT}|g; s|<CONTAINER_NAME>|${CONTAINER_NAME}|g; s|<NAMESPACE>|${NAMESPACE}|g" deploy.template.yml > deploy-new.yml 
+        
+        # Generate combined Deployment and Service YAML
+        yq eval "(
+          .kind == \"Deployment\" | 
+          .metadata.name = \"$APP_NAME\" |
+          .spec.selector.matchLabels.app = \"$APP_NAME\" |
+          .spec.template.metadata.labels.app = \"$APP_NAME\" |
+          .metadata.namespace = \"$NAMESPACE\" |
+          .spec.template.spec.containers[0].name = \"$CONTAINER_NAME\" |
+          .spec.template.spec.containers[0].image = \"$IMAGE_NAME\" |
+          .spec.template.spec.containers[0].ports[0].containerPort = $PORT
+        ) |
+        (
+          .kind == \"Service\" | 
+          .metadata.name = \"$APP_NAME-service\" |
+          .metadata.namespace = \"$NAMESPACE\" |
+          .spec.selector.app = \"$APP_NAME\" |
+          .spec.ports[0].port = $PORT |
+          .spec.ports[0].targetPort = $PORT
+        )" deploy.template.yml > deploy-new.yml
+
     - name: Deploy to Minikube
       run: |
         kubectl apply -f deploy-new.yml
