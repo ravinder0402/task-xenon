@@ -1,0 +1,65 @@
+name: Building and pushing Docker image
+
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: "Please enter Dockerhub Username"
+        required: true
+      imagename:
+        description: "Please enter your Image name"
+        required: true
+      tagname:
+        description: "Please enter tagname for image"
+        required: true
+      appname:
+        description: "Enter the app name"
+        required: true
+      containername:
+        description: "Enter the name of the container"
+        required: true
+      portvalue:
+        description: "Enter the value of port"
+        required: true
+      namespace:
+        description: "Enter the Kubernetes namespace"
+        required: true
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+    - name: Check out the repo
+      uses: actions/checkout@v4
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.USER_NAME }}
+        password: ${{ secrets.ACCESS_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}
+
+    - name: Start Minikube and Configure kubectl
+      run: |
+        kubectl config use-context minikube
+        IMAGE_NAME="${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}"
+        APP_NAME="${{ inputs.appname }}"
+        PORT="${{ inputs.portvalue }}"
+        CONTAINER_NAME="${{ inputs.containername }}"
+        NAMESPACE="${{ inputs.namespace }}"
+        sed "s|<IMAGE_NAME>|${IMAGE_NAME}|g; s|<APP_NAME>|${APP_NAME}|g; s|<PORT>|${PORT}|g; s|<CONTAINER_NAME>|${CONTAINER_NAME}|g; s|<NAMESPACE>|${NAMESPACE}|g" deploy.template.yml > deploy-new.yml 
+    - name: Deploy to Minikube
+      run: |
+        kubectl apply -f deploy-new.yml
+        sleep 60  
+        kubectl get pods -n ${{ inputs.namespace }}
+        kubectl get services -n ${{ inputs.namespace }}
+        MINIKUBE_URL=$(minikube service ${{ inputs.appname }} --namespace ${{ inputs.namespace }} --url)
+        curl $MINIKUBE_URL
