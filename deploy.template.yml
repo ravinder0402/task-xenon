@@ -1,35 +1,97 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: <APP_NAME>
-  namespace: <NAMESPACE>
-spec:
-  selector:
-    matchLabels:
-      app: <APP_NAME>
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: <APP_NAME>
-    spec:
-      containers:
-        - name: <CONTAINER_NAME>
-          image: <IMAGE_NAME>
-          ports:
-            - containerPort: <PORT>
+name: Building and pushing Docker image
 
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: <APP_NAME>
-  namespace: <NAMESPACE>
-spec:
-  type: NodePort
-  selector:
-    app: <APP_NAME>
-  ports:
-    - port: <PORT>
-      targetPort: <PORT>
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: "Please enter Dockerhub Username"
+        required: true
+      imagename:
+        description: "Please enter your Image name"
+        required: true
+      tagname:
+        description: "Please enter tagname for image"
+        required: true
+      appname:
+        description: "Enter the app name"
+        required: true
+      containername:
+        description: "Enter the name of the container"
+        required: true
+      portvalue:
+        description: "Enter the value of port"
+        required: true
+      namespace:
+        description: "Enter the Kubernetes namespace"
+        required: true
 
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+    - name: Check out the repo
+      uses: actions/checkout@v4
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.USER_NAME }}
+        password: ${{ secrets.ACCESS_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}
+
+    - name: Install yq
+      run: |
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+          brew install yq
+        elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+          choco install yq
+        elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+          sudo apt-get install -y yq
+        else
+          echo "Unsupported OS"
+          exit 1
+        fi
+
+    - name: Start Minikube and Configure kubectl
+      run: |
+        kubectl config use-context minikube
+        IMAGE_NAME="${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}"
+        APP_NAME="${{ inputs.appname }}"
+        PORT="${{ inputs.portvalue }}"
+        CONTAINER_NAME="${{ inputs.containername }}"
+        NAMESPACE="${{ inputs.namespace }}"
+
+        yq eval "(
+          .kind == \"Deployment\" | 
+          .metadata.name = \"$APP_NAME\" |
+          .spec.selector.matchLabels.app = \"$APP_NAME\" |
+          .spec.template.metadata.labels.app = \"$APP_NAME\" |
+          .metadata.namespace = \"$NAMESPACE\" |
+          .spec.template.spec.containers[0].name = \"$CONTAINER_NAME\" |
+          .spec.template.spec.containers[0].image = \"$IMAGE_NAME\" |
+          .spec.template.spec.containers[0].ports[0].containerPort = $PORT
+        ) |
+        (
+          .kind == \"Service\" | 
+          .metadata.name = \"$APP_NAME\" |
+          .metadata.namespace = \"$NAMESPACE\" |
+          .spec.selector.app = \"$APP_NAME\" |
+          .spec.ports[0].port = $PORT |
+          .spec.ports[0].targetPort = $PORT
+        )" deploy.template.yml > deploy-new.yml
+
+    - name: Deploy to Minikube
+      run: |
+        kubectl apply -f deploy-new.yml
+        sleep 60  
+        kubectl get pods -n ${{ inputs.namespace }}
+        kubectl get services -n ${{ inputs.namespace }}
+        MINIKUBE_URL=$(minikube service ${{ inputs.appname }} --namespace ${{ inputs.namespace }} --url)
+        curl $MINIKUBE_URL
