@@ -55,6 +55,12 @@ jobs:
         CONTAINER_NAME="${{ inputs.containername }}"
         NAMESPACE="${{ inputs.namespace }}"
 
+    - name: Setup YQ
+      uses: devorbitus/yq-action-output@v1.1
+      id: yq_setup
+      with:
+        cmd: yq --version
+
     - name: Create deploy-new.yml from template
       run: |
         if [[ -f deploy.template.yml ]]; then
@@ -77,7 +83,7 @@ jobs:
             .spec.ports[0].targetPort = $PORT
           )" deploy.template.yml > deploy-new.yml
 
-          echo "Contents of deploy.template.yml after transformation:"
+          echo "Contents of deploy-new.yml after transformation:"
           cat deploy-new.yml
         else
           echo "deploy.template.yml not found. Cannot create deploy-new.yml."
