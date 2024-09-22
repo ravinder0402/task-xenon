@@ -55,6 +55,11 @@ jobs:
         elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
           sudo apt-get update
           sudo apt-get install -y yq || sudo snap install yq
+          
+          # Fix APT Repository Issues
+          sudo sed -i '/pgdg.list/d' /etc/apt/sources.list
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7B3B788A8D3785C
+          sudo apt-get update
         else
           echo "Unsupported OS"
           exit 1
