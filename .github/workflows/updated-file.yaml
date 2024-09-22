@@ -83,8 +83,6 @@ jobs:
       run: |
         echo "Contents of deploy-new.yml:"
         cat deploy-new.yml
-        echo "Contents of deploy.template.yml:"
-        cat deploy.template.yml
         echo "End of deploy-new.yml"
 
     - name: Deploy to Minikube
