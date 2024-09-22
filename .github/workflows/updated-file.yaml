@@ -74,6 +74,7 @@ jobs:
         yq w -i deploy-new.yml spec.containers[0].ports[0].containerPort "${PORT}"
         yq w -i deploy-new.yml spec.ports[0].port "${PORT}"
         yq w -i deploy-new.yml spec.ports[0].targetPort "${PORT}"
+        cat deploy-new.yml
 
     - name: Deploy to Minikube
       run: |
