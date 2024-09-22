@@ -56,7 +56,7 @@ jobs:
         NAMESPACE="${{ inputs.namespace }}"
 
     - name: Placing values in template yaml file
-      id: Value placing
+      id: Valueplacing
       uses: devorbitus/yq-action-output@v1.1
       with:
         cmd: |
