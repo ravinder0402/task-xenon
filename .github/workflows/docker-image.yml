@@ -49,11 +49,12 @@ jobs:
     - name: Install yq
       run: |
         if [[ "$OSTYPE" == "darwin"* ]]; then
-          brew install yq
+          brew install yq || brew upgrade yq
         elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-          choco install yq
+          choco install yq || choco upgrade yq
         elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-          sudo apt-get install -y yq
+          sudo apt-get update
+          sudo apt-get install -y yq || sudo snap install yq
         else
           echo "Unsupported OS"
           exit 1
@@ -67,7 +68,7 @@ jobs:
         PORT="${{ inputs.portvalue }}"
         CONTAINER_NAME="${{ inputs.containername }}"
         NAMESPACE="${{ inputs.namespace }}"
-
+        
         # Replace placeholders in deploy.template.yml
         yq eval "(
           .kind == \"Deployment\" | 
@@ -96,4 +97,3 @@ jobs:
         kubectl get services -n ${{ inputs.namespace }}
         MINIKUBE_URL=$(minikube service ${{ inputs.appname }} --namespace ${{ inputs.namespace }} --url)
         curl $MINIKUBE_URL
-
