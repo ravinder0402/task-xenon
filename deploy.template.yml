@@ -31,6 +31,6 @@ spec:
     app: <APP_NAME>
   ports:
     - protocol: TCP
-      port: <SERVICE_PORT>
+      port: <PORT>
       targetPort: <PORT>
   type: NodePort
