@@ -57,33 +57,40 @@ jobs:
 
     - name: Setup YQ
       uses: devorbitus/yq-action-output@v1.1
-      id: yq_setup
-      with:
-        cmd: yq eval "(
-            .kind == \"Deployment\" | 
-            .metadata.name = \"$APP_NAME\" |
-            .spec.selector.matchLabels.app = \"$APP_NAME\" |
-            .spec.template.metadata.labels.app = \"$APP_NAME\" |
-            .metadata.namespace = \"$NAMESPACE\" |
-            .spec.template.spec.containers[0].name = \"$CONTAINER_NAME\" |
-            .spec.template.spec.containers[0].image = \"$IMAGE_NAME\" |
-            .spec.template.spec.containers[0].ports[0].containerPort = $PORT
+
+    - name: Create deploy-new.yml from template
+      run: |
+        if [[ -f deploy.template.yml ]]; then
+          yq eval "(
+              .kind == \"Deployment\" |
+              .metadata.name = \"$APP_NAME\" |
+              .spec.selector.matchLabels.app = \"$APP_NAME\" |
+              .spec.template.metadata.labels.app = \"$APP_NAME\" |
+              .metadata.namespace = \"$NAMESPACE\" |
+              .spec.template.spec.containers[0].name = \"$CONTAINER_NAME\" |
+              .spec.template.spec.containers[0].image = \"$IMAGE_NAME\" |
+              .spec.template.spec.containers[0].ports[0].containerPort = $PORT
           ) |
           (
-            .kind == \"Service\" | 
-            .metadata.name = \"$APP_NAME-service\" |
-            .metadata.namespace = \"$NAMESPACE\" |
-            .spec.selector.app = \"$APP_NAME\" |
-            .spec.ports[0].port = $PORT |
-            .spec.ports[0].targetPort = $PORT
+              .kind == \"Service\" |
+              .metadata.name = \"$APP_NAME-service\" |
+              .metadata.namespace = \"$NAMESPACE\" |
+              .spec.selector.app = \"$APP_NAME\" |
+              .spec.ports[0].port = $PORT |
+              .spec.ports[0].targetPort = $PORT
           )" deploy.template.yml > deploy-new.yml
 
+          echo "Contents of deploy-new.yml after transformation:"
+          cat deploy-new.yml
+        else
+          echo "deploy.template.yml not found. Cannot create deploy-new.yml."
+          exit 1
+        fi
 
     - name: Check deploy-new.yml contents
       run: |
         echo "Contents of deploy-new.yml:"
         cat deploy-new.yml
-        cat  deploy.template.yml
         echo "End of deploy-new.yml"
 
     - name: Deploy to Minikube
