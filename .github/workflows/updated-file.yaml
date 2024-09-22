@@ -57,10 +57,9 @@ jobs:
 
     - name: Setup YQ
       uses: devorbitus/yq-action-output@v1.1
-
-    - name: Create deploy-new.yml from template
-      run: |
-        if [[ -f deploy.template.yml ]]; then
+      id: setup_yq
+      with:
+        cmd: |
           yq eval "(
               .kind == \"Deployment\" |
               .metadata.name = \"$APP_NAME\" |
@@ -80,17 +79,12 @@ jobs:
               .spec.ports[0].targetPort = $PORT
           )" deploy.template.yml > deploy-new.yml
 
-          echo "Contents of deploy-new.yml after transformation:"
-          cat deploy-new.yml
-        else
-          echo "deploy.template.yml not found. Cannot create deploy-new.yml."
-          exit 1
-        fi
-
     - name: Check deploy-new.yml contents
       run: |
         echo "Contents of deploy-new.yml:"
         cat deploy-new.yml
+        echo "Contents of deploy.template.yml:"
+        cat deploy.template.yml
         echo "End of deploy-new.yml"
 
     - name: Deploy to Minikube
