@@ -1,18 +1,78 @@
-name: Setup YQ on Push
+
+
+name: Building and pushing Docker image
 
 on:
-  push:
-    branches:
-      - main  # Change this to your default branch if different
+  workflow_dispatch:
+    inputs:
+      username:
+        description: "Please enter Dockerhub Username"
+        required: true
+      imagename:
+        description: "Please enter your Image name"
+        required: true
+      tagname:
+        description: "Please enter tagname for image"
+        required: true
+      appname:
+        description: "Enter the app name"
+        required: true
+      containername:
+        description: "Enter the name of the container"
+        required: true
+      portvalue:
+        description: "Enter the value of port"
+        required: true
+      namespace:
+        description: "Enter the Kubernetes namespace"
+        required: true
 
 jobs:
-  setup-yq:
+  build:
     runs-on: self-hosted
 
     steps:
-    - name: Check out the repository
+    - name: Check out the repo
       uses: actions/checkout@v4
-    - name: Check YQ Version
-      run: |
-        yq --version
 
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.USER_NAME }}
+        password: ${{ secrets.ACCESS_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}
+
+    - name: Start Minikube and Configure kubectl
+      run: |
+        kubectl config use-context minikube
+        IMAGE_NAME="${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}"
+        APP_NAME="${{ inputs.appname }}"
+        PORT="${{ inputs.portvalue }}"
+        CONTAINER_NAME="${{ inputs.containername }}"
+        NAMESPACE="${{ inputs.namespace }}"
+        yq eval '
+          .metadata.name = env(APP_NAME) |
+          .metadata.namespace = env(NAMESPACE) |
+          .spec.selector.matchLabels.app = env(APP_NAME) |
+          .spec.template.metadata.labels.app = env(APP_NAME) |
+          .spec.containers[0].name = env(CONTAINER_NAME) |
+          .spec.containers[0].image = env(IMAGE_NAME) |
+          .spec.containers[0].ports[0].containerPort = env(PORT) |
+          .spec.ports[0].port = env(PORT) |
+          .spec.ports[0].targetPort = env(PORT)
+        ' deploy.template.yml > deploy-new.yml
+
+    - name: Deploy to Minikube
+      run: |
+        kubectl apply -f deploy-new.yml
+        sleep 60  
+        kubectl get pods -n ${{ inputs.namespace }}
+        kubectl get services -n ${{ inputs.namespace }}
+        MINIKUBE_URL=$(minikube service ${{ inputs.appname }} --namespace ${{ inputs.namespace }} --url)
+        curl $MINIKUBE_URL
