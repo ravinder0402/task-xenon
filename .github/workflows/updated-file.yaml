@@ -46,31 +46,11 @@ jobs:
         push: true
         tags: ${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}
 
-    - name: Install yq
-      run: |
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-          brew install yq || brew upgrade yq
-        elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-          choco install yq || choco upgrade yq
-        elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-          sudo apt-get update
-          sudo apt-get install -y wget
-          # Install yq
-          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
-          sudo chmod +x /usr/bin/yq
-          # Clean up pgdg.list
-          if [ -f /etc/apt/sources.list.d/pgdg.list ]; then
-            sudo awk '!seen[$0]++' /etc/apt/sources.list.d/pgdg.list | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
-          fi
-          # Remove duplicate entries in sources.list
-          sudo sed -i '/pgdg.list/d' /etc/apt/sources.list
-          # Add the key for PGDG if needed
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7B3B788A8D3785C
-          sudo apt-get update
-        else
-          echo "Unsupported OS"
-          exit 1
-        fi
+    - name: Get SDK Version from config
+      id: lookupSdkVersion
+      uses: devorbitus/yq-action-output@v1.1
+      with:
+        cmd: yq eval '.renutil.version' 'config.yml'
 
     - name: Start Minikube and Configure kubectl
       run: |
@@ -81,7 +61,7 @@ jobs:
         CONTAINER_NAME="${{ inputs.containername }}"
         NAMESPACE="${{ inputs.namespace }}"
         
-        # Generate combined Deployment and Service YAML
+        # Generate combined Deployment and Service YAML using yq output
         yq eval "(
           .kind == \"Deployment\" | 
           .metadata.name = \"$APP_NAME\" |
