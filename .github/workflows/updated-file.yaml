@@ -56,17 +56,24 @@ jobs:
         PORT="${{ inputs.portvalue }}"
         CONTAINER_NAME="${{ inputs.containername }}"
         NAMESPACE="${{ inputs.namespace }}"
-        yq eval '
-          .metadata.name = env(APP_NAME) |
-          .metadata.namespace = env(NAMESPACE) |
-          .spec.selector.matchLabels.app = env(APP_NAME) |
-          .spec.template.metadata.labels.app = env(APP_NAME) |
-          .spec.containers[0].name = env(CONTAINER_NAME) |
-          .spec.containers[0].image = env(IMAGE_NAME) |
-          .spec.containers[0].ports[0].containerPort = env(PORT) |
-          .spec.ports[0].port = env(PORT) |
-          .spec.ports[0].targetPort = env(PORT)
-        ' deploy.template.yml > deploy-new.yml
+    - name: Start Minikube and Configure kubectl
+      run: |
+        kubectl config use-context minikube
+        IMAGE_NAME="${{ inputs.username }}/${{ inputs.imagename }}:${{ inputs.tagname }}"
+        APP_NAME="${{ inputs.appname }}"
+        PORT="${{ inputs.portvalue }}"
+        CONTAINER_NAME="${{ inputs.containername }}"
+        NAMESPACE="${{ inputs.namespace }}"
+        cp deploy.template.yml deploy-new.yml
+        yq w -i deploy-new.yml metadata.name "${APP_NAME}"
+        yq w -i deploy-new.yml metadata.namespace "${NAMESPACE}"
+        yq w -i deploy-new.yml spec.selector.matchLabels.app "${APP_NAME}"
+        yq w -i deploy-new.yml spec.template.metadata.labels.app "${APP_NAME}"
+        yq w -i deploy-new.yml spec.containers[0].name "${CONTAINER_NAME}"
+        yq w -i deploy-new.yml spec.containers[0].image "${IMAGE_NAME}"
+        yq w -i deploy-new.yml spec.containers[0].ports[0].containerPort "${PORT}"
+        yq w -i deploy-new.yml spec.ports[0].port "${PORT}"
+        yq w -i deploy-new.yml spec.ports[0].targetPort "${PORT}"
 
     - name: Deploy to Minikube
       run: |
