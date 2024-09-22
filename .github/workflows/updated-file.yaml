@@ -59,7 +59,7 @@ jobs:
 
         cp deploy.template.yml deploy-new.yml
 
-        # Replace placeholders using yq for Deployment
+        # Replace placeholders for Deployment
         yq w -i deploy-new.yml metadata.name "${APP_NAME}"
         yq w -i deploy-new.yml metadata.namespace "${NAMESPACE}"
         yq w -i deploy-new.yml spec.selector.matchLabels.app "${APP_NAME}"
@@ -69,11 +69,11 @@ jobs:
         yq w -i deploy-new.yml spec.template.spec.containers[0].ports[0].containerPort "${PORT}"
 
         # Replace placeholders for Service
-        yq w -i deploy-new.yml metadata.name "${APP_NAME}"
-        yq w -i deploy-new.yml metadata.namespace "${NAMESPACE}"
-        yq w -i deploy-new.yml spec.selector.app "${APP_NAME}"
-        yq w -i deploy-new.yml spec.ports[0].port "${PORT}"
-        yq w -i deploy-new.yml spec.ports[0].targetPort "${PORT}"
+        yq w -i deploy-new.yml metadata.name "${APP_NAME}" --doc 1 
+        yq w -i deploy-new.yml metadata.namespace "${NAMESPACE}" --doc 1  
+        yq w -i deploy-new.yml spec.selector.app "${APP_NAME}" --doc 1  
+        yq w -i deploy-new.yml spec.ports[0].port "${PORT}" --doc 1  
+        yq w -i deploy-new.yml spec.ports[0].targetPort "${PORT}" --doc 1  
         cat deploy-new.yml
 
     - name: Deploy to Minikube
@@ -84,4 +84,5 @@ jobs:
         kubectl get services -n ${{ inputs.namespace }}
         MINIKUBE_URL=$(minikube service ${{ inputs.appname }} --namespace ${{ inputs.namespace }} --url)
         curl $MINIKUBE_URL
+
 
