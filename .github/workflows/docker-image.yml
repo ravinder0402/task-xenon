@@ -60,6 +60,14 @@ jobs:
           exit 1
         fi
 
+    - name: Fix APT Repository Issues
+      if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        run: |
+          sudo sed -i '/pgdg.list/d' /etc/apt/sources.list
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7B3B788A8D3785C
+          sudo apt-get update
+      fi
+
     - name: Start Minikube and Configure kubectl
       run: |
         kubectl config use-context minikube
@@ -88,7 +96,6 @@ jobs:
           .spec.ports[0].port = $PORT |
           .spec.ports[0].targetPort = $PORT
         )" deploy.template.yml > deploy-new.yml
-
     - name: Deploy to Minikube
       run: |
         kubectl apply -f deploy-new.yml
