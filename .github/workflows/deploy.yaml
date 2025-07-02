@@ -1,3 +1,33 @@
+name: Deloying Nginx on the Kubernetes
+on:
+  push: 
+    branches:
+      - main
 jobs:
   deploy:
-    runs-on:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONIG_RAW }}" > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+          kubectl config get-contexts
+
+      - name: Deploy Nginx Pod
+        run : |
+          export KUBECONFIG=$PWD/kubeconfig
+          kubectl apply -f  - <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+    - name: nginx
+      image: nginx:latest
+      ports:
+        - containerPort: 80
+EOF
+      
