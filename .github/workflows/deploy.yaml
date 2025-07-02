@@ -18,19 +18,7 @@ jobs:
           echo "${{ secrets.KUBECONFIG_RAW }}" > kubeconfig
           export KUBECONFIG=$PWD/kubeconfig
           kubectl config get-contexts
-
-      - name: Deploy Nginx Pod
+      - name: Create Nginx Pod using kubectl run
         run: |
           export KUBECONFIG=$PWD/kubeconfig
-          kubectl apply -f - <<EOF
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nginx
-spec:
-  containers:
-    - name: nginx
-      image: nginx:latest
-      ports:
-        - containerPort: 80
-EOF
+          kubectl run nginx --image=nginx --port=80
