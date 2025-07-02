@@ -11,12 +11,12 @@ jobs:
         uses: actions/checkout@v4
       - name: kubeconfig
         run: |
-          echo "${{ secrets.KUBECONIG_RAW }}" > kubeconfig
+          echo "${{ secrets.KUBECONFIG_RAW }}" > kubeconfig
           export KUBECONFIG=$PWD/kubeconfig
           kubectl config get-contexts
 
       - name: Deploy Nginx Pod
-        run : |
+        run: |
           export KUBECONFIG=$PWD/kubeconfig
           kubectl apply -f  - <<EOF
 apiVersion: v1
